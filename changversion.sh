@@ -18,7 +18,7 @@ fileBuild=$(echo ${dir})/app/build.gradle
 
 typeChange=$1
 isPush=$2
-branchPush=$3
+=$3
 isCreateTag=$4
 isPushTag=$5
 
@@ -130,7 +130,7 @@ newVersion=${major}.${minor}.${patch}.${versionCodeNumber}
 
 git add app/build.gradle
 
-if [[ ${branchReleaseHotfix} != "" ]]; then
+if [[ ${branchPush} != "" ]]; then
 
     git commit -m "Release hot-fix. Increase version to ${newVersion}"
 
