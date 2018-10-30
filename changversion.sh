@@ -18,7 +18,7 @@ fileBuild=$(echo ${dir})/app/build.gradle
 
 typeChange=$1
 isPush=$2
-=$3
+branchPush=$3
 isCreateTag=$4
 isPushTag=$5
 
