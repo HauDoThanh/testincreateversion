@@ -146,14 +146,14 @@ fi
 
 
 if [[ ${isCreateTag} == "true" ]]; then
+
     git tag ${newVersion}
     echo "Tag is: ${newVersion}"
+
+    if [[ ${isPushTag} == "true" ]]; then
+        git push origin ${newVersion}
+    fi
+
 fi
-
-
-if [[ ${isPushTag} == "true" ]]; then
-    git push origin ${newVersion}
-fi
-
 
 echo "=========Change build version success========="
