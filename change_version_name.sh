@@ -138,6 +138,15 @@ echo ${newVersionNameString}
 oldVersion=${oldVersionName}.${versionCodeNumber}
 newVersion=${major}.${minor}.${patch}.${versionCodeNumber}
 
+if [[ ${isCreateTag} == "true" ]]; then
+
+    echo "Tag is: ${oldVersion}"
+    git tag ${oldVersion}
+    git push origin ${oldVersion}
+
+fi
+
+
 git add app/build.gradle
 git commit -m "Increase version to ${newVersion}"
 
@@ -146,12 +155,6 @@ if [[ ${isPush} == "true" ]]; then
 fi
 
 
-if [[ ${isCreateTag} == "true" ]]; then
 
-    echo "Tag is: ${oldVersion}"
-    git tag ${oldVersion}
-    git push origin ${oldVersion}
-
-fi
 
 echo "=========Change build version success========="
