@@ -26,15 +26,6 @@ isPush=$2
 branchPush=$3
 isCreateTag=$4
 
-
-if [[ ${typeChange} == "" ]]; then
-
-    echo "You must provide a type for change version"
-    exit 1
-
-fi
-
-
 if [[ ${branchPush} != "" ]]; then
 
     git checkout ${branchPush} 2>log.txt
