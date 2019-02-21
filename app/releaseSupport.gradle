@@ -96,7 +96,7 @@ task increaseVersionName {
 
         ['sh', '-c', 'git add .'].execute().text.trim()
 
-         ['sh', '-c', 'git commit -m fdsafsdfdf'].execute().text.trim()
+         ['sh', '-c', 'git commit -m fdsafgfdsgssfgfsgfdsgdgdfgsregsregressdfdf'].execute().text.trim()
     }
 
     print "done"
