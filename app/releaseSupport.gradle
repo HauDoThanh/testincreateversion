@@ -45,7 +45,7 @@ task increaseVersionName {
     }
 
     currentVersionName = currentVersionName.replaceAll("\"", "")
-    println currentVersionName
+    println "Current version code: " + currentVersionName
 
     def splitVersionName = currentVersionName.split("[.]")
 
@@ -77,11 +77,11 @@ task increaseVersionName {
         buildFile.text = contentFile.replaceFirst("versionName\\s\"[0-9.]*\"", "versionName " + "\"" + newVersionName + "\"")
         println "Increase version name success: " + newVersionName
 
-        if (project.hasProperty("pushCode") && project.hasProperty("branchPush")){
-            ['sh', '-c', 'git add app/build.gradle'].execute().text.trim()
-            ['sh', '-c', 'git commit -m ' + "Increase version name to " + newVersionName].execute().text.trim()
-            ['sh', '-c', 'git push origin ' + branchPush].execute().text.trim()
-        }
+        //  if (project.hasProperty("pushCode") && project.hasProperty("branchPush")){
+        ['sh', '-c', 'git add *'].execute().text.trim()
+        ['sh', '-c', 'git commit -m ' + "Increase version name to " + newVersionName].execute().text.trim()
+        //     ['sh', '-c', 'git push origin ' + branchPush].execute().text.trim()
+        //   }
     }
 }
 
