@@ -1,0 +1,87 @@
+import java.util.regex.Pattern
+
+task increaseVersionCode {
+    def currentVersionCode = 0
+    def newVersionCode = 0
+
+    def buildFile = new File("app/build.gradle")
+    def contentFile = buildFile.getText("UTF-8")
+
+    def regex = "versionCode\\s[\\t]*([^\\n\\r]*)"
+    def versionCodeRex = Pattern.compile(regex, Pattern.MULTILINE).matcher(contentFile)
+
+    while (versionCodeRex.find()) {
+        currentVersionCode = versionCodeRex.group(1)
+    }
+
+    if (project.hasProperty("versionCodeInput")) {
+        newVersionCode = versionCodeInput
+    } else {
+        newVersionCode = Integer.parseInt(currentVersionCode) + 1
+    }
+
+
+    doLast {
+        buildFile.text = contentFile.replaceFirst("versionCode\\s[\\t]*([0-9]*)", "versionCode " + newVersionCode)
+        println "Increase version code success: " + newVersionCode
+    }
+}
+
+task increaseVersionName {
+    def currentVersionName = "1.0.0"
+    def newVersionName = "1.x.x"
+    def major
+    def minor
+    def patch
+
+    def buildFile = new File("app/build.gradle")
+    def contentFile = buildFile.getText("UTF-8")
+
+    def regex = "versionName\\s[\\t]*([^\\n\\r]*)"
+    def versionNameRex = Pattern.compile(regex, Pattern.MULTILINE).matcher(contentFile)
+
+    while (versionNameRex.find()) {
+        currentVersionName = versionNameRex.group(1)
+    }
+
+    currentVersionName = currentVersionName.replaceAll("\"", "")
+    println currentVersionName
+
+    def splitVersionName = currentVersionName.split("[.]")
+
+
+    major = splitVersionName[0]
+    minor = splitVersionName[1]
+    patch = splitVersionName[2]
+
+
+    if (project.hasProperty("versionNameInput")) {
+        newVersionName = versionNameInput
+    } else {
+        if (project.hasProperty("major")) {
+            major = Integer.parseInt(major) + 1
+        }
+
+        if (project.hasProperty("minor")) {
+            minor = Integer.parseInt(minor) + 1
+        }
+
+        if (project.hasProperty("patch")) {
+            patch = Integer.parseInt(patch) + 1
+        }
+
+        newVersionName = major + "." + minor + "." + patch
+    }
+
+    doLast {
+        buildFile.text = contentFile.replaceFirst("versionName\\s\"[0-9.]*\"", "versionName " + "\"" + newVersionName + "\"")
+        println "Increase version name success: " + newVersionName
+
+        if (project.hasProperty("pushCode") && project.hasProperty("branchPush")){
+            ['sh', '-c', 'git add app/build.gradle'].execute().text.trim()
+            ['sh', '-c', 'git commit -m ' + "Increase version name to " + newVersionName].execute().text.trim()
+            ['sh', '-c', 'git push origin ' + branchPush].execute().text.trim()
+        }
+    }
+}
+
