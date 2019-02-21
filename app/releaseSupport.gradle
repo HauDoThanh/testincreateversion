@@ -75,13 +75,32 @@ task increaseVersionName {
 
     doLast {
         buildFile.text = contentFile.replaceFirst("versionName\\s\"[0-9.]*\"", "versionName " + "\"" + newVersionName + "\"")
-        println "Increase version name success: " + newVersionName
+        def messageCommit = "Increase version name success: " + newVersionName
+        println messageCommit
 
         //  if (project.hasProperty("pushCode") && project.hasProperty("branchPush")){
-        ['sh', '-c', 'git add *'].execute().text.trim()
-        ['sh', '-c', 'git commit -m ' + "Increase version name to " + newVersionName].execute().text.trim()
+        //['sh', '-c', 'git add .'].execute().text.trim()
+        //    ['sh', '-c', 'git commit -m ' + "Increase version name to " + newVersionName].execute().text.trim()
         //     ['sh', '-c', 'git push origin ' + branchPush].execute().text.trim()
         //   }
+
+        // print ['sh', '-c', 'git add .'].execute().text.trim()
+        // print 'git commit -m "commit ne"'.execute()
+
+        //['sh', '-c', 'git fdsafsd'].execute().text.trim()
+
+        def commit = "git commit -m " + messageCommit
+
+        println "git add .".execute().text.trim()
+        println commit.execute().text.trim()
+
     }
+
+    print "done"
+
+
 }
 
+def static pushCode(buildNumber) {
+    return "git add .".execute().text.trim()
+}
