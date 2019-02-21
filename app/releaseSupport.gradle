@@ -88,19 +88,16 @@ task increaseVersionName {
         // print 'git commit -m "commit ne"'.execute()
 
         //['sh', '-c', 'git fdsafsd'].execute().text.trim()
+//
+//        def commit = "git commit -m \"" + messageCommit + "\""
+//        println(commit)
+////        println "git add .".execute().text.trim()
+//        println commit.execute().text.trim()
 
-        def commit = "git commit -m " + messageCommit
+        ['sh', '-c', 'git add .'].execute().text.trim()
 
-        println "git add .".execute().text.trim()
-        println commit.execute().text.trim()
-
+         ['sh', '-c', 'git commit -m fdsafsdfdf'].execute().text.trim()
     }
 
     print "done"
-
-
-}
-
-def static pushCode(buildNumber) {
-    return "git add .".execute().text.trim()
 }
