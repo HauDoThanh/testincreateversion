@@ -96,11 +96,12 @@ task increaseVersionName {
 
         ['sh', '-c', 'git add .'].execute().text.trim()
 
-        ['sh', '-c', 'git commit -m messageCommit'].execute().text
+        ['sh', '-c', 'git commit -m ' + '\"' + messageCommit + '\"'].execute().text
 
-        def x = ['sh', '-c', 'git commit -m', messageCommit].toString()
+        def x = ['sh', '-c', 'git commit -m ' + '\"' + messageCommit + '\"'].toString()
         print x
 
       //  print['sh', '-c', 'git commit -m \"', messageCommit, '\"'].toString()
+
     }
 }
