@@ -83,7 +83,7 @@ task increaseVersionName {
             ['sh', '-c', 'git commit -m ' + '\"' + messageCommit + '\"'].execute().text
             ['sh', '-c', 'git push origin ' + branchPush].execute().text
 
-            println ['sh', '-c', 'git push origin ' + branchPush]
+            println ['sh', '-c', 'git push origin ' + branchPush].toString()
 
             println pushCode
             print branchPush
