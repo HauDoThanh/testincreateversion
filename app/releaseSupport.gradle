@@ -45,6 +45,19 @@ def pushTag = {
     println "Create and push tag at branch $branchPush"
 }
 
+def executeGit = {
+    if (project.hasProperty("branch")) {
+        branchPush = branch
+        if (project.hasProperty("isCreateTag")) {
+            pushTag()
+        }
+
+        if (project.hasProperty("isPushCode")) {
+            pushCode()
+        }
+    }
+}
+
 task increaseVersionCode {
     def versions = readFile()
 
@@ -113,15 +126,6 @@ task increaseVersionName {
         tagName = currentVersionName + "." + currentVersionCode
         messageCommit = "Increase version to " + newVersionName + "." + currentVersionCode
 
-        if (project.hasProperty("branch")) {
-            branchPush = branch
-            if (project.hasProperty("isCreateTag")) {
-                pushTag()
-            }
-
-            if (project.hasProperty("isPushCode")) {
-                pushCode()
-            }
-        }
+        executeGit()
     }
 }
