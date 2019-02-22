@@ -12,9 +12,9 @@
  * Create and push tag:
  -> Example: ./gradlew increaseVersionCode '-Pbranch=<your branch>' '-PisCreateTag=true'
 
- * More detail: you can compare multi variable to run task
+ * More detail: you can combine multi variable to run task
  -> Example: ./gradlew increaseVersionCode '-PversionCodeInput=<your number>' '-Pbranch=<your branch>' '-PisPushCode=true' '-PisCreateTag=true'
-             ./gradlew increaseVersionCode '-Pbranch=<your branch>' '-PisPushCode=true' '-PisCreateTag=true'
+ ./gradlew increaseVersionCode '-Pbranch=<your branch>' '-PisPushCode=true' '-PisCreateTag=true'
 
 
 
@@ -37,26 +37,32 @@
  * Create and push tag:
  -> Example: ./gradlew increaseVersionName '-Pbranch=<your branch>' '-PisCreateTag=true'
 
- * More detail: you can compare multi variable to run task
+ * More detail: you can combine multi variable to run task
  -> Example: ./gradlew increaseVersionName '-PversionNameInput=<your number>' '-Pbranch=<your branch>' '-PisPushCode=true' '-PisCreateTag=true'
-             ./gradlew increaseVersionName '-Ptype=minor' '-Pbranch=<your branch>' '-PisPushCode=true' '-PisCreateTag=true'
+ ./gradlew increaseVersionName '-Ptype=minor' '-Pbranch=<your branch>' '-PisPushCode=true' '-PisCreateTag=true'
 
  *** Note: if you use both parameter '-PversionCodeInput=<your number>' and '-Ptype=<type>', the script will prioritize for '-PversionNameInput=<your number>'
  */
 
-//
+
 import java.util.regex.Pattern
 
 def messageCommit
 def branchPush
 def tagName
+def contentFile
 
-def readFile = {
+def readGradleFile = {
+    def buildFile = new File("app/build.gradle")
+    return buildFile.getText("UTF-8")
+}
+
+
+def getVersions = {
+    contentFile = readGradleFile()
+
     def versionCode = 1
     def versionName = "1.0.0"
-
-    def buildFile = new File("app/build.gradle")
-    def contentFile = buildFile.getText("UTF-8")
 
     //get versionCode
     def versionCodePattern = "versionCode\\s[\\t]*([^\\n\\r]*)"
@@ -74,8 +80,9 @@ def readFile = {
         versionName = versionNameRex.group(1)
     }
 
-    return [contentFile, versionCode, versionName.replaceAll("\"", "")]
+    return [versionCode, versionName.replaceAll("\"", "")]
 }
+
 
 def pushCode = {
     ['sh', '-c', 'git add .'].execute().text.trim()
@@ -106,11 +113,10 @@ def executeGit = {
 }
 
 task increaseVersionCode {
-    def versions = readFile()
+    def versions = getVersions()
 
-    def contentFile = versions[0]
-    def currentVersionCode = versions[1]
-    def currentVersionName = versions[2]
+    def currentVersionCode = versions[0]
+    def currentVersionName = versions[1]
     def newVersionCode = 0
 
     if (project.hasProperty("versionCodeInput")) {
@@ -137,11 +143,10 @@ task increaseVersionCode {
 
 
 task increaseVersionName {
-    def versions = readFile()
+    def versions = getVersions()
 
-    def contentFile = versions[0]
-    def currentVersionCode = versions[1]
-    def currentVersionName = versions[2]
+    def currentVersionCode = versions[0]
+    def currentVersionName = versions[1]
     def newVersionName = "1.x.x"
     def major
     def minor
