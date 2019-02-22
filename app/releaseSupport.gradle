@@ -1,5 +1,43 @@
 import java.util.regex.Pattern
 
+def messageCommit
+def branchPush
+
+def readFile = {
+    def versionCode = 0
+    def versionName = 0
+
+    def buildFile = new File("app/build.gradle")
+    def contentFile = buildFile.getText("UTF-8")
+
+    def versionCodePattern = "versionCode\\s[\\t]*([^\\n\\r]*)"
+    def versionCodeRex = Pattern.compile(versionCodePattern, Pattern.MULTILINE).matcher(contentFile)
+
+    while (versionCodeRex.find()) {
+        versionCode = versionCodeRex.group(1)
+    }
+
+    def versionNamePattern = "versionName\\s[\\t]*([^\\n\\r]*)"
+    def versionNameRex = Pattern.compile(versionNamePattern, Pattern.MULTILINE).matcher(contentFile)
+
+    while (versionNameRex.find()) {
+        versionName = versionNameRex.group(1)
+    }
+
+    return [contentFile, versionCode, versionName.replaceAll("\"", "")]
+}
+
+def pushCode = {
+    //if (project.hasProperty("pushCode") && project.hasProperty("branchPush")) {
+    ['sh', '-c', 'git add .'].execute().text.trim()
+    ['sh', '-c', 'git commit -m ' + '\"' + messageCommit + '\"'].execute().text
+    ['sh', '-c', 'git push origin ' + branchPush].execute().text
+
+    print "Commit and push code at branch $branchPush"
+    //  }
+}
+
+
 task increaseVersionCode {
     def currentVersionCode = 0
     def newVersionCode = 0
@@ -27,29 +65,7 @@ task increaseVersionCode {
     }
 }
 
-def readFile = {
-    def versionCode = 0
-    def versionName = 0
 
-    def buildFile = new File("app/build.gradle")
-    def contentFile = buildFile.getText("UTF-8")
-
-    def versionCodePattern = "versionCode\\s[\\t]*([^\\n\\r]*)"
-    def versionCodeRex = Pattern.compile(versionCodePattern, Pattern.MULTILINE).matcher(contentFile)
-
-    while (versionCodeRex.find()) {
-        versionCode = versionCodeRex.group(1)
-    }
-
-    def versionNamePattern = "versionName\\s[\\t]*([^\\n\\r]*)"
-    def versionNameRex = Pattern.compile(versionNamePattern, Pattern.MULTILINE).matcher(contentFile)
-
-    while (versionNameRex.find()) {
-        versionName = versionNameRex.group(1)
-    }
-
-    return [contentFile, versionCode, versionName.replaceAll("\"", "")]
-}
 
 task increaseVersionName {
     def versions = readFile()
@@ -88,15 +104,12 @@ task increaseVersionName {
 
     doLast {
         buildFile.text = contentFile.replaceFirst("versionName\\s\"[0-9.]*\"", "versionName " + "\"" + newVersionName + "\"")
-        def messageCommit = "Increase version to " + newVersionName + "." + currentVersionCode
+        messageCommit = "Increase version to " + newVersionName + "." + currentVersionCode
         println messageCommit
 
         if (project.hasProperty("pushCode") && project.hasProperty("branchPush")) {
-            ['sh', '-c', 'git add .'].execute().text.trim()
-            ['sh', '-c', 'git commit -m ' + '\"' + messageCommit + '\"'].execute().text
-            ['sh', '-c', 'git push origin ' + branchPush].execute().text
-
-            print "Commit and push code at branch $branchPush"
+            this.branchPush = branchPush
+            pushCode()
         }
     }
 }
