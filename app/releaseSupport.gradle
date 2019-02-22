@@ -76,6 +76,7 @@ task increaseVersionCode {
         buildFile.text = contentFile.replaceFirst("versionCode\\s[\\t]*([0-9]*)", "versionCode " + newVersionCode)
         tagName = currentVersionName + "." + newVersionCode
         messageCommit = "Increase version to " + currentVersionName + "." + newVersionCode
+        println messageCommit
 
         executeGit()
     }
@@ -120,6 +121,7 @@ task increaseVersionName {
         buildFile.text = contentFile.replaceFirst("versionName\\s\"[0-9.]*\"", "versionName " + "\"" + newVersionName + "\"")
         tagName = currentVersionName + "." + currentVersionCode
         messageCommit = "Increase version to " + newVersionName + "." + currentVersionCode
+        println messageCommit
 
         executeGit()
     }
