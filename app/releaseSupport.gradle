@@ -1,15 +1,17 @@
 import java.util.regex.Pattern
 
 def messageCommit
-def branchPushCode
+def branchPush
+def tagName
 
 def readFile = {
-    def versionCode = 0
-    def versionName = 0
+    def versionCode = 1
+    def versionName = "1.0.0"
 
     def buildFile = new File("app/build.gradle")
     def contentFile = buildFile.getText("UTF-8")
 
+    //get versionCode
     def versionCodePattern = "versionCode\\s[\\t]*([^\\n\\r]*)"
     def versionCodeRex = Pattern.compile(versionCodePattern, Pattern.MULTILINE).matcher(contentFile)
 
@@ -17,6 +19,7 @@ def readFile = {
         versionCode = versionCodeRex.group(1)
     }
 
+    //get versionName
     def versionNamePattern = "versionName\\s[\\t]*([^\\n\\r]*)"
     def versionNameRex = Pattern.compile(versionNamePattern, Pattern.MULTILINE).matcher(contentFile)
 
@@ -28,29 +31,28 @@ def readFile = {
 }
 
 def pushCode = {
-    //if (project.hasProperty("pushCode") && project.hasProperty("branchPush")) {
     ['sh', '-c', 'git add .'].execute().text.trim()
     ['sh', '-c', 'git commit -m ' + '\"' + messageCommit + '\"'].execute().text
-    ['sh', '-c', 'git push origin ' + branchPushCode].execute().text
+    ['sh', '-c', 'git push origin ' + branchPush].execute().text
 
     print "Commit and push code at branch $branchPushCode"
-    //  }
 }
 
+def pushTag = {
+    ['sh', '-c', 'git tag ' + tagName].execute().text.trim()
+    ['sh', '-c', 'git push origin ' + branchPush].execute().text.trim()
+
+    print "Create and push tag at branch $branchPushCode"
+}
 
 task increaseVersionCode {
-    def currentVersionCode = 0
+    def versions = readFile()
+
+    def contentFile = versions[0]
+    def currentVersionCode = versions[1]
+    def currentVersionName = versions[2]
+
     def newVersionCode = 0
-
-    def buildFile = new File("app/build.gradle")
-    def contentFile = buildFile.getText("UTF-8")
-
-    def regex = "versionCode\\s[\\t]*([^\\n\\r]*)"
-    def versionCodeRex = Pattern.compile(regex, Pattern.MULTILINE).matcher(contentFile)
-
-    while (versionCodeRex.find()) {
-        currentVersionCode = versionCodeRex.group(1)
-    }
 
     if (project.hasProperty("versionCodeInput")) {
         newVersionCode = versionCodeInput
@@ -58,13 +60,18 @@ task increaseVersionCode {
         newVersionCode = Integer.parseInt(currentVersionCode) + 1
     }
 
-
     doLast {
         buildFile.text = contentFile.replaceFirst("versionCode\\s[\\t]*([0-9]*)", "versionCode " + newVersionCode)
-        println "Increase version code success: " + newVersionCode
+        tagName = newVersionName + "." + currentVersionCode
+        messageCommit = "Increase version to " + tagName
+        println messageCommit
+
+        if (project.hasProperty("pushCode") && project.hasProperty("branchPush")) {
+            branchPushCode = branchPush
+            pushCode()
+        }
     }
 }
-
 
 
 task increaseVersionName {
@@ -80,7 +87,6 @@ task increaseVersionName {
 
     println currentVersionName
     println currentVersionCode
-
 
     def splitVersionName = currentVersionName.split("[.]")
     major = splitVersionName[0]
@@ -104,12 +110,17 @@ task increaseVersionName {
 
     doLast {
         buildFile.text = contentFile.replaceFirst("versionName\\s\"[0-9.]*\"", "versionName " + "\"" + newVersionName + "\"")
-        messageCommit = "Increase version to " + newVersionName + "." + currentVersionCode
-        println messageCommit
+        tagName = newVersionName + "." + currentVersionCode
+        messageCommit = "Increase version to " + tagName
 
-        if (project.hasProperty("pushCode") && project.hasProperty("branchPush")) {
-            branchPushCode = branchPush
+        if (project.hasProperty("pushCode") && project.hasProperty("branch")) {
+            branchPush = branch
             pushCode()
+        }
+
+        if (project.hasProperty("createTag") && project.hasProperty("branch")) {
+            branchPush = branch
+            pushTag()
         }
     }
 }
