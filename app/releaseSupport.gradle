@@ -75,14 +75,10 @@ task increaseVersionCode {
 
     doLast {
         buildFile.text = contentFile.replaceFirst("versionCode\\s[\\t]*([0-9]*)", "versionCode " + newVersionCode)
-        tagName = newVersionName + "." + currentVersionCode
-        messageCommit = "Increase version to " + tagName
-        println messageCommit
+        tagName = currentVersionName + "." + newVersionCode
+        messageCommit = "Increase version to " + currentVersionName + "." + newVersionCode
 
-        if (project.hasProperty("pushCode") && project.hasProperty("branchPush")) {
-            branchPushCode = branchPush
-            pushCode()
-        }
+        executeGit()
     }
 }
 
