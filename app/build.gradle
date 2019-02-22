@@ -7,7 +7,7 @@ android {
         applicationId "com.example.dthau.myapplication"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 1006
+        versionCode 1007
         versionName "2.93.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
