@@ -1,7 +1,7 @@
 import java.util.regex.Pattern
 
 def messageCommit
-def branchPush
+def branchPushCode
 
 def readFile = {
     def versionCode = 0
@@ -31,9 +31,9 @@ def pushCode = {
     //if (project.hasProperty("pushCode") && project.hasProperty("branchPush")) {
     ['sh', '-c', 'git add .'].execute().text.trim()
     ['sh', '-c', 'git commit -m ' + '\"' + messageCommit + '\"'].execute().text
-    ['sh', '-c', 'git push origin ' + branchPush].execute().text
+    ['sh', '-c', 'git push origin ' + branchPushCode].execute().text
 
-    print "Commit and push code at branch $branchPush"
+    print "Commit and push code at branch $branchPushCode"
     //  }
 }
 
@@ -108,7 +108,7 @@ task increaseVersionName {
         println messageCommit
 
         if (project.hasProperty("pushCode") && project.hasProperty("branchPush")) {
-            this.branchPush = branchPush
+            branchPushCode = branchPush
             pushCode()
         }
     }
