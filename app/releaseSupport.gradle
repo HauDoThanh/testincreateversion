@@ -35,14 +35,14 @@ def pushCode = {
     ['sh', '-c', 'git commit -m ' + '\"' + messageCommit + '\"'].execute().text
     ['sh', '-c', 'git push origin ' + branchPush].execute().text
 
-    print "Commit and push code at branch $branchPushCode"
+    print "Commit and push code at branch $branchPush"
 }
 
 def pushTag = {
     ['sh', '-c', 'git tag ' + tagName].execute().text.trim()
     ['sh', '-c', 'git push origin ' + branchPush].execute().text.trim()
 
-    print "Create and push tag at branch $branchPushCode"
+    print "Create and push tag at branch $branchPush"
 }
 
 task increaseVersionCode {
