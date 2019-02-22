@@ -64,7 +64,6 @@ task increaseVersionCode {
     def contentFile = versions[0]
     def currentVersionCode = versions[1]
     def currentVersionName = versions[2]
-
     def newVersionCode = 0
 
     if (project.hasProperty("versionCodeInput")) {
