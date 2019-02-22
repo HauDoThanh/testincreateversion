@@ -81,7 +81,9 @@ task increaseVersionName {
         if (project.hasProperty("pushCode") && project.hasProperty("branchPush")){
             ['sh', '-c', 'git add .'].execute().text.trim()
             ['sh', '-c', 'git commit -m ' + '\"' + messageCommit + '\"'].execute().text
-            ['sh', '-c', 'git push ' + branchPush].execute().text
+            ['sh', '-c', 'git push origin ' + branchPush].execute().text
+
+            println ['sh', '-c', 'git push origin ' + branchPush]
 
             println pushCode
             print branchPush
