@@ -27,29 +27,46 @@ task increaseVersionCode {
     }
 }
 
+def readFile = {
+    def versionCode = 0
+    def versionName = 0
+
+    def buildFile = new File("app/build.gradle")
+    def contentFile = buildFile.getText("UTF-8")
+
+    def versionCodePattern = "versionCode\\s[\\t]*([^\\n\\r]*)"
+    def versionCodeRex = Pattern.compile(versionCodePattern, Pattern.MULTILINE).matcher(contentFile)
+
+    while (versionCodeRex.find()) {
+        versionCode = versionCodeRex.group(1)
+    }
+
+    def versionNamePattern = "versionName\\s[\\t]*([^\\n\\r]*)"
+    def versionNameRex = Pattern.compile(versionNamePattern, Pattern.MULTILINE).matcher(contentFile)
+
+    while (versionNameRex.find()) {
+        versionName = versionNameRex.group(1)
+    }
+
+    return [contentFile, versionCode, versionName.replaceAll("\"", "")]
+}
+
 task increaseVersionName {
-    def currentVersionName = "1.0.0"
+    def versions = readFile()
+
+    def contentFile = versions[0]
+    def currentVersionCode = versions[1]
+    def currentVersionName = versions[2]
     def newVersionName = "1.x.x"
     def major
     def minor
     def patch
 
-    def buildFile = new File("app/build.gradle")
-    def contentFile = buildFile.getText("UTF-8")
+    println currentVersionName
+    println currentVersionCode
 
-    def regex = "versionName\\s[\\t]*([^\\n\\r]*)"
-    def versionNameRex = Pattern.compile(regex, Pattern.MULTILINE).matcher(contentFile)
-
-    while (versionNameRex.find()) {
-        currentVersionName = versionNameRex.group(1)
-    }
-
-    currentVersionName = currentVersionName.replaceAll("\"", "")
-    println "Current version code: " + currentVersionName
 
     def splitVersionName = currentVersionName.split("[.]")
-
-
     major = splitVersionName[0]
     minor = splitVersionName[1]
     patch = splitVersionName[2]
@@ -71,7 +88,7 @@ task increaseVersionName {
 
     doLast {
         buildFile.text = contentFile.replaceFirst("versionName\\s\"[0-9.]*\"", "versionName " + "\"" + newVersionName + "\"")
-        def messageCommit = "Increase version name success: " + newVersionName
+        def messageCommit = "Increase version to " + newVersionName + "." + currentVersionCode
         println messageCommit
 
         if (project.hasProperty("pushCode") && project.hasProperty("branchPush")) {
