@@ -113,14 +113,15 @@ task increaseVersionName {
         tagName = currentVersionName + "." + currentVersionCode
         messageCommit = "Increase version to " + newVersionName + "." + currentVersionCode
 
-        if (project.hasProperty("createTag") && project.hasProperty("branch")) {
+        if (project.hasProperty("branch")) {
             branchPush = branch
-            pushTag()
-        }
+            if (project.hasProperty("isCreateTag")) {
+                pushTag()
+            }
 
-        if (project.hasProperty("pushCode") && project.hasProperty("branch")) {
-            branchPush = branch
-            pushCode()
+            if (project.hasProperty("isPushCode")) {
+                pushCode()
+            }
         }
     }
 }
