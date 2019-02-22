@@ -60,14 +60,10 @@ task increaseVersionName {
     } else {
         if (project.hasProperty("major")) {
             major = Integer.parseInt(major) + 1
-        }
-
-        if (project.hasProperty("minor")) {
-            minor = Integer.parseInt(minor) + 1
-        }
-
-        if (project.hasProperty("patch")) {
+        } else if (project.hasProperty("patch")) {
             patch = Integer.parseInt(patch) + 1
+        } else {
+            minor = Integer.parseInt(minor) + 1
         }
 
         newVersionName = major + "." + minor + "." + patch
@@ -78,15 +74,12 @@ task increaseVersionName {
         def messageCommit = "Increase version name success: " + newVersionName
         println messageCommit
 
-        if (project.hasProperty("pushCode") && project.hasProperty("branchPush")){
+        if (project.hasProperty("pushCode") && project.hasProperty("branchPush")) {
             ['sh', '-c', 'git add .'].execute().text.trim()
             ['sh', '-c', 'git commit -m ' + '\"' + messageCommit + '\"'].execute().text
             ['sh', '-c', 'git push origin ' + branchPush].execute().text
 
-            println ['sh', '-c', 'git push origin ' + branchPush].toString()
-
-            println pushCode
-            print branchPush
+            print "Commit and push code at branch $branchPush"
         }
     }
 }
