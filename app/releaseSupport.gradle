@@ -75,7 +75,7 @@ task increaseVersionName {
 
     doLast {
         buildFile.text = contentFile.replaceFirst("versionName\\s\"[0-9.]*\"", "versionName " + "\"" + newVersionName + "\"")
-        def messageCommit = "Increase-version-name-success-" + newVersionName
+        def messageCommit = "Increase version name success: " + newVersionName
         println messageCommit
 
         //  if (project.hasProperty("pushCode") && project.hasProperty("branchPush")){
