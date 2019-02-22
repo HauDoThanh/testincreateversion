@@ -1,3 +1,50 @@
+/****** How to run this script?
+ **** Task increaseVersionCode: we have 2 options
+ * Input specific versionCode:
+ -> Example: ./gradlew increaseVersionCode '-PversionCodeInput=<your number>'
+
+ * Auto increase versionCode one by one:
+ -> Example: ./gradlew increaseVersionCode
+
+ * Push code to your branch:
+ -> Example: ./gradlew increaseVersionCode '-Pbranch=<your branch>' '-PisPushCode=true'
+
+ * Create and push tag:
+ -> Example: ./gradlew increaseVersionCode '-Pbranch=<your branch>' '-PisCreateTag=true'
+
+ * More detail: you can compare multi variable to run task
+ -> Example: ./gradlew increaseVersionCode '-PversionCodeInput=<your number>' '-Pbranch=<your branch>' '-PisPushCode=true' '-PisCreateTag=true'
+             ./gradlew increaseVersionCode '-Pbranch=<your branch>' '-PisPushCode=true' '-PisCreateTag=true'
+
+
+
+ **** Task increaseVersionName
+ * Input specific versionName:
+ -> Example: ./gradlew increaseVersionName '-PversionNameInput=<your number>'
+
+ * Auto increase major one by one:
+ -> Example: ./gradlew increaseVersionName '-Ptype=major'
+
+ * Auto increase minor one by one:
+ -> Example: ./gradlew increaseVersionName '-Ptype=minor'
+
+ * Auto increase patch one by one:
+ -> Example: ./gradlew increaseVersionName '-Ptype=patch'
+
+ * Push code to your branch:
+ -> Example: ./gradlew increaseVersionName '-Pbranch=<your branch>' '-PisPushCode=true'
+
+ * Create and push tag:
+ -> Example: ./gradlew increaseVersionName '-Pbranch=<your branch>' '-PisCreateTag=true'
+
+ * More detail: you can compare multi variable to run task
+ -> Example: ./gradlew increaseVersionName '-PversionNameInput=<your number>' '-Pbranch=<your branch>' '-PisPushCode=true' '-PisCreateTag=true'
+             ./gradlew increaseVersionName '-Ptype=minor' '-Pbranch=<your branch>' '-PisPushCode=true' '-PisCreateTag=true'
+
+ *** Note: if you use both parameter '-PversionCodeInput=<your number>' and '-Ptype=<type>', the script will prioritize for '-PversionNameInput=<your number>'
+ */
+
+//
 import java.util.regex.Pattern
 
 def messageCommit
@@ -67,18 +114,24 @@ task increaseVersionCode {
     def newVersionCode = 0
 
     if (project.hasProperty("versionCodeInput")) {
-        newVersionCode = versionCodeInput
+        if (!versionCodeInput.matches("[0-9]*")) {
+            println "Version code incorrect"
+        } else {
+            newVersionCode = Integer.parseInt(versionCodeInput)
+        }
     } else {
         newVersionCode = Integer.parseInt(currentVersionCode) + 1
     }
 
-    doLast {
-        buildFile.text = contentFile.replaceFirst("versionCode\\s[\\t]*([0-9]*)", "versionCode " + newVersionCode)
-        tagName = currentVersionName + "." + newVersionCode
-        messageCommit = "Increase version to " + currentVersionName + "." + newVersionCode
-        println messageCommit
+    if (newVersionCode > 0) {
+        doLast {
+            buildFile.text = contentFile.replaceFirst("versionCode\\s[\\t]*([0-9]*)", "versionCode " + newVersionCode)
+            tagName = currentVersionName + "." + newVersionCode
+            messageCommit = "Increase version to " + currentVersionName + "." + newVersionCode
+            println messageCommit
 
-        executeGit()
+            executeGit()
+        }
     }
 }
 
@@ -93,9 +146,12 @@ task increaseVersionName {
     def major
     def minor
     def patch
+    def isVersionNameInputCorrect = false
 
-    println currentVersionName
-    println currentVersionCode
+    doLast {
+        println currentVersionName
+        println currentVersionCode
+    }
 
     def splitVersionName = currentVersionName.split("[.]")
     major = splitVersionName[0]
@@ -104,25 +160,34 @@ task increaseVersionName {
 
 
     if (project.hasProperty("versionNameInput")) {
-        newVersionName = versionNameInput
-    } else {
-        if (project.hasProperty("major")) {
-            major = Integer.parseInt(major) + 1
-        } else if (project.hasProperty("patch")) {
-            patch = Integer.parseInt(patch) + 1
+        if (!versionNameInput.matches("^[0-9]*\\.[0-9]*\\.[0-9]*\$")) {
+            println "Version name incorrect"
         } else {
-            minor = Integer.parseInt(minor) + 1
+            isVersionNameInputCorrect = true
+            newVersionName = versionNameInput
         }
-
+    } else if (project.hasProperty("type")) {
+        if (type == "major") {
+            major = Integer.parseInt(major) + 1
+            minor = 0
+            patch = 0
+        } else if (type == "minor") {
+            minor = Integer.parseInt(minor) + 1
+            patch = 0
+        } else if (type == "patch") {
+            patch = Integer.parseInt(patch) + 1
+        }
         newVersionName = major + "." + minor + "." + patch
     }
 
-    doLast {
-        buildFile.text = contentFile.replaceFirst("versionName\\s\"[0-9.]*\"", "versionName " + "\"" + newVersionName + "\"")
-        tagName = currentVersionName + "." + currentVersionCode
-        messageCommit = "Increase version to " + newVersionName + "." + currentVersionCode
-        println messageCommit
+    if (isVersionNameInputCorrect) {
+        doLast {
+            buildFile.text = contentFile.replaceFirst("versionName\\s\"[0-9.]*\"", "versionName " + "\"" + newVersionName + "\"")
+            tagName = currentVersionName + "." + currentVersionCode
+            messageCommit = "Increase version to " + newVersionName + "." + currentVersionCode
+            println messageCommit
 
-        executeGit()
+            executeGit()
+        }
     }
 }
