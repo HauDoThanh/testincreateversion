@@ -51,6 +51,8 @@ def messageCommit
 def branchPush
 def tagName
 def contentFile
+def currentVersionCode
+def currentVersionName
 
 def readGradleFile = {
     def buildFile = new File("app/build.gradle")
@@ -61,7 +63,7 @@ def readGradleFile = {
 def getVersions = {
     contentFile = readGradleFile()
 
-    def versionCode = 1
+    def versionCode = 0
     def versionName = "1.0.0"
 
     //get versionCode
@@ -80,7 +82,8 @@ def getVersions = {
         versionName = versionNameRex.group(1)
     }
 
-    return [versionCode, versionName.replaceAll("\"", "")]
+    currentVersionCode = versionCode
+    currentVersionName = versionName.replaceAll("\"", "")
 }
 
 
@@ -99,25 +102,34 @@ def pushTag = {
     println "Create and push tag at branch $branchPush"
 }
 
+
 def executeGit = {
     if (project.hasProperty("branch")) {
         branchPush = branch
         if (project.hasProperty("isCreateTag")) {
-            pushTag()
+            if (isCreateTag == "true") {
+                pushTag()
+            }
         }
 
         if (project.hasProperty("isPushCode")) {
-            pushCode()
+            if (isPushCode == "true") {
+                pushCode()
+            }
         }
     }
 }
 
-task increaseVersionCode {
-    def versions = getVersions()
 
-    def currentVersionCode = versions[0]
-    def currentVersionName = versions[1]
+task increaseVersionCode {
+    getVersions()
+
     def newVersionCode = 0
+
+    doLast {
+        println "Current versionName " + currentVersionName
+        println "Current versionCode " + currentVersionCode
+    }
 
     if (project.hasProperty("versionCodeInput")) {
         if (!versionCodeInput.matches("[0-9]*")) {
@@ -143,19 +155,17 @@ task increaseVersionCode {
 
 
 task increaseVersionName {
-    def versions = getVersions()
+    getVersions()
 
-    def currentVersionCode = versions[0]
-    def currentVersionName = versions[1]
     def newVersionName = "1.x.x"
     def major
     def minor
     def patch
-    def isVersionNameInputCorrect = false
+    def isVersionNameInputCorrect = true
 
     doLast {
-        println currentVersionName
-        println currentVersionCode
+        println "Current versionName " + currentVersionName
+        println "Current versionCode " + currentVersionCode
     }
 
     def splitVersionName = currentVersionName.split("[.]")
@@ -167,8 +177,8 @@ task increaseVersionName {
     if (project.hasProperty("versionNameInput")) {
         if (!versionNameInput.matches("^[0-9]*\\.[0-9]*\\.[0-9]*\$")) {
             println "Version name incorrect"
+            isVersionNameInputCorrect = false
         } else {
-            isVersionNameInputCorrect = true
             newVersionName = versionNameInput
         }
     } else if (project.hasProperty("type")) {
@@ -181,6 +191,7 @@ task increaseVersionName {
             patch = 0
         } else if (type == "patch") {
             patch = Integer.parseInt(patch) + 1
+            print patch
         }
         newVersionName = major + "." + minor + "." + patch
     }
@@ -195,4 +206,26 @@ task increaseVersionName {
             executeGit()
         }
     }
+}
+
+task testww {
+    def str1 = "23432"
+
+    if (project.hasProperty("str2")){
+        if (str1 == str2){
+            print "equal"
+        }else
+        {
+            println("not equal")
+        }
+
+        if (str1 == str2){
+            print "2equal"
+        }else
+        {
+            println("2not equal")
+        }
+    }
+
+
 }
