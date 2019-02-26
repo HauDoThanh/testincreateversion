@@ -147,9 +147,9 @@ task pushCode {
             println "Commit and push code at branch $branch"
             xxx.waitForProcessOutput(System.out, System.err)
         } else {
-            def xxx =  ['sh', '-c', 'git push origin'].execute().text.trim()
+            def xxx =  ['sh', '-c', 'git push origin'].execute()
             println "Commit and push code at current branch"
-            xxx.waitForProcessOutput(System.out, System.err)
+            print xxx.text
         }
     }
 }
