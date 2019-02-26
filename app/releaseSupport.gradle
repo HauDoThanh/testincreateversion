@@ -1,54 +1,8 @@
-/****** How to run this script?
- **** Task increaseVersionCode: we have 2 options
- * Input specific versionCode:
- -> Example: ./gradlew increaseVersionCode '-PversionCodeInput=<your number>'
-
- * Auto increase versionCode one by one:
- -> Example: ./gradlew increaseVersionCode
-
- * Push code to your branch:
- -> Example: ./gradlew increaseVersionCode '-Pbranch=<your branch>' '-PisPushCode=true'
-
- * Create and push tag:
- -> Example: ./gradlew increaseVersionCode '-Pbranch=<your branch>' '-PisCreateTag=true'
-
- * More detail: you can combine multi variable to run task
- -> Example: ./gradlew increaseVersionCode '-PversionCodeInput=<your number>' '-Pbranch=<your branch>' '-PisPushCode=true' '-PisCreateTag=true'
- ./gradlew increaseVersionCode '-Pbranch=<your branch>' '-PisPushCode=true' '-PisCreateTag=true'
-
-
-
- **** Task increaseVersionName
- * Input specific versionName:
- -> Example: ./gradlew increaseVersionName '-PversionNameInput=<your number>'
-
- * Auto increase major one by one:
- -> Example: ./gradlew increaseVersionName '-Ptype=major'
-
- * Auto increase minor one by one:
- -> Example: ./gradlew increaseVersionName '-Ptype=minor'
-
- * Auto increase patch one by one:
- -> Example: ./gradlew increaseVersionName '-Ptype=patch'
-
- * Push code to your branch:
- -> Example: ./gradlew increaseVersionName '-Pbranch=<your branch>' '-PisPushCode=true'
-
- * Create and push tag:
- -> Example: ./gradlew increaseVersionName '-Pbranch=<your branch>' '-PisCreateTag=true'
-
- * More detail: you can combine multi variable to run task
- -> Example: ./gradlew increaseVersionName '-PversionNameInput=<your number>' '-Pbranch=<your branch>' '-PisPushCode=true' '-PisCreateTag=true'
- ./gradlew increaseVersionName '-Ptype=minor' '-Pbranch=<your branch>' '-PisPushCode=true' '-PisCreateTag=true'
-
- *** Note: if you use both parameter '-PversionCodeInput=<your number>' and '-Ptype=<type>', the script will prioritize for '-PversionNameInput=<your number>'
- */
-
-
 import java.util.regex.Pattern
 
+def GROUP_NAME = "Release Support"
+
 def messageCommit
-def branchPush
 def tagName
 def contentFile
 def currentVersionCode
@@ -84,44 +38,18 @@ def getVersions = {
 
     currentVersionCode = versionCode
     currentVersionName = versionName.replaceAll("\"", "")
+    tagName = currentVersionName + "." + currentVersionCode
 }
 
 
-def pushCode = {
-    ['sh', '-c', 'git add .'].execute().text.trim()
-    ['sh', '-c', 'git commit -m ' + '\"' + messageCommit + '\"'].execute().text
-    ['sh', '-c', 'git push origin ' + branchPush].execute().text
-
-    println "Commit and push code at branch $branchPush"
-}
-
-def pushTag = {
-    ['sh', '-c', 'git tag ' + tagName].execute().text.trim()
-    ['sh', '-c', 'git push origin ' + branchPush].execute().text.trim()
-
-    println "Create and push tag at branch $branchPush"
-}
-
-
-def executeGit = {
-    if (project.hasProperty("branch")) {
-        branchPush = branch
-        if (project.hasProperty("isCreateTag")) {
-            if (isCreateTag == "true") {
-                pushTag()
-            }
-        }
-
-        if (project.hasProperty("isPushCode")) {
-            if (isPushCode == "true") {
-                pushCode()
-            }
-        }
-    }
+def commitCode = {
+    ['sh', '-c', 'git add app/build.gradle'].execute().text.trim()
+    ['sh', '-c', 'git commit -m ' + '\"' + messageCommit + '\"'].execute().text.trim()
 }
 
 
 task increaseVersionCode {
+    group GROUP_NAME
     getVersions()
 
     def newVersionCode = 0
@@ -132,8 +60,10 @@ task increaseVersionCode {
     }
 
     if (project.hasProperty("versionCodeInput")) {
-        if (!versionCodeInput.matches("[0-9]*")) {
-            println "Version code incorrect"
+        if (!versionCodeInput.matches("^[0-9]+\$")) {
+            println "Version code is incorrect"
+        } else if (versionCodeInput == "0") {
+            newVersionCode = Integer.parseInt(currentVersionCode) + 1
         } else {
             newVersionCode = Integer.parseInt(versionCodeInput)
         }
@@ -144,17 +74,17 @@ task increaseVersionCode {
     if (newVersionCode > 0) {
         doLast {
             buildFile.text = contentFile.replaceFirst("versionCode\\s[\\t]*([0-9]*)", "versionCode " + newVersionCode)
-            tagName = currentVersionName + "." + newVersionCode
             messageCommit = "Increase version to " + currentVersionName + "." + newVersionCode
             println messageCommit
 
-            executeGit()
+            commitCode()
         }
     }
 }
 
 
 task increaseVersionName {
+    group GROUP_NAME
     getVersions()
 
     def newVersionName = "1.x.x"
@@ -175,8 +105,8 @@ task increaseVersionName {
 
 
     if (project.hasProperty("versionNameInput")) {
-        if (!versionNameInput.matches("^[0-9]*\\.[0-9]*\\.[0-9]*\$")) {
-            println "Version name incorrect"
+        if (!versionNameInput.matches("^[0-9]+.[0-9]+.[0-9]+\$")) {
+            println "Version name is incorrect"
             isVersionNameInputCorrect = false
         } else {
             newVersionName = versionNameInput
@@ -199,33 +129,46 @@ task increaseVersionName {
     if (isVersionNameInputCorrect) {
         doLast {
             buildFile.text = contentFile.replaceFirst("versionName\\s\"[0-9.]*\"", "versionName " + "\"" + newVersionName + "\"")
-            tagName = currentVersionName + "." + currentVersionCode
             messageCommit = "Increase version to " + newVersionName + "." + currentVersionCode
             println messageCommit
 
-            executeGit()
+            commitCode()
         }
     }
 }
 
-task testww {
-    def str1 = "23432"
 
-    if (project.hasProperty("str2")){
-        if (str1 == str2){
-            print "equal"
-        }else
-        {
-            println("not equal")
-        }
+task pushCode {
+    group GROUP_NAME
 
-        if (str1 == str2){
-            print "2equal"
-        }else
-        {
-            println("2not equal")
+    doLast {
+        if (project.hasProperty("branch")) {
+            def xxx = ['sh', '-c', 'git push origin ' + branch].execute().text.trim()
+            println "Commit and push code at branch $branch"
+            print xxx
+        } else {
+            ['sh', '-c', 'git push origin'].execute().text.trim()
+            println "Commit and push code at branch current branch"
         }
     }
+}
 
 
+task createAndPushTag {
+    group GROUP_NAME
+
+    doLast {
+        getVersion()
+
+        ['sh', '-c', 'git tag ' + tagName].execute().text.trim()
+
+        if (project.hasProperty("isPushTag") && isPushTag == "true") {
+            if (project.hasProperty("branch")) {
+                ['sh', '-c', 'git push origin ' + tagName].execute().text.trim()
+                println "Create and push tag at branch $branch"
+            } else {
+                println "You must provide branch to push tag"
+            }
+        }
+    }
 }
