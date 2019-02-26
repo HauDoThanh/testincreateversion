@@ -145,10 +145,10 @@ task pushCode {
         if (project.hasProperty("branch")) {
             def xxx = ['sh', '-c', 'git push origin ' + branch].execute().text.trim()
             println "Commit and push code at branch $branch"
-            print xxx
+            xxx.waitForProcessOutput(System.out, System.err)
         } else {
             ['sh', '-c', 'git push origin'].execute().text.trim()
-            println "Commit and push code at branch current branch"
+            println "Commit and push code at current branch"
         }
     }
 }
