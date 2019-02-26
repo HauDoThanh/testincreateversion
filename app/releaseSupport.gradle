@@ -8,37 +8,37 @@ def contentFile
 def currentVersionCode
 def currentVersionName
 
-def readGradleFile = {
+
+def readAppGradleFile = {
     def buildFile = new File("app/build.gradle")
     return buildFile.getText("UTF-8")
 }
 
 
 def getVersions = {
-    contentFile = readGradleFile()
+    println("chay ne")
+    contentFile = readAppGradleFile()
 
-    def versionCode = 0
-    def versionName = "1.0.0"
-
-    //get versionCode
     def versionCodePattern = "versionCode\\s[\\t]*([^\\n\\r]*)"
-    def versionCodeRex = Pattern.compile(versionCodePattern, Pattern.MULTILINE).matcher(contentFile)
-
-    while (versionCodeRex.find()) {
-        versionCode = versionCodeRex.group(1)
-    }
-
-    //get versionName
     def versionNamePattern = "versionName\\s[\\t]*([^\\n\\r]*)"
-    def versionNameRex = Pattern.compile(versionNamePattern, Pattern.MULTILINE).matcher(contentFile)
 
-    while (versionNameRex.find()) {
-        versionName = versionNameRex.group(1)
-    }
-
-    currentVersionCode = versionCode
-    currentVersionName = versionName.replaceAll("\"", "")
+    currentVersionCode = parseVersion(versionCodePattern, contentFile)
+    currentVersionName = parseVersion(versionNamePattern, contentFile).replaceAll("\"", "")
     tagName = currentVersionName + "." + currentVersionCode
+
+    println("currentVersionCode: " + currentVersionCode)
+    println("currentVersionName: " + currentVersionName)
+    println(tagName)
+}
+
+
+ def parseVersion(pattern, contentFile) {
+    def versionRex = Pattern.compile(pattern, Pattern.MULTILINE).matcher(contentFile)
+    def versionValue = ""
+    while (versionRex.find()) {
+        versionValue = versionRex.group(1)
+    }
+    return versionValue
 }
 
 
@@ -50,29 +50,28 @@ def commitCode = {
 
 task increaseVersionCode {
     group GROUP_NAME
-    getVersions()
-
-    def newVersionCode = 0
 
     doLast {
-        println "Current versionName " + currentVersionName
+        getVersions()
+
+        def newVersionCode = 0
+
         println "Current versionCode " + currentVersionCode
-    }
+        println "Current versionName " + currentVersionName
 
-    if (project.hasProperty("versionCodeInput")) {
-        if (!versionCodeInput.matches("^[0-9]+\$")) {
-            println "Version code is incorrect"
-        } else if (versionCodeInput == "0") {
-            newVersionCode = Integer.parseInt(currentVersionCode) + 1
+        if (project.hasProperty("versionCodeInput")) {
+            if (!versionCodeInput.matches("^[0-9]+\$")) {
+                println "Version code is incorrect"
+            } else if (versionCodeInput == "0") {
+                newVersionCode = Integer.parseInt(currentVersionCode) + 1
+            } else {
+                newVersionCode = Integer.parseInt(versionCodeInput)
+            }
         } else {
-            newVersionCode = Integer.parseInt(versionCodeInput)
+            newVersionCode = Integer.parseInt(currentVersionCode) + 1
         }
-    } else {
-        newVersionCode = Integer.parseInt(currentVersionCode) + 1
-    }
+        if (newVersionCode > 0) {
 
-    if (newVersionCode > 0) {
-        doLast {
             buildFile.text = contentFile.replaceFirst("versionCode\\s[\\t]*([0-9]*)", "versionCode " + newVersionCode)
             messageCommit = "Increase version to " + currentVersionName + "." + newVersionCode
             println messageCommit
@@ -85,49 +84,49 @@ task increaseVersionCode {
 
 task increaseVersionName {
     group GROUP_NAME
-    getVersions()
-
-    def newVersionName = "1.x.x"
-    def major
-    def minor
-    def patch
-    def isVersionNameInputCorrect = true
 
     doLast {
-        println "Current versionName " + currentVersionName
+        getVersions()
+
+        def newVersionName = "1.x.x"
+        def major
+        def minor
+        def patch
+        def isVersionNameInputCorrect = true
+
         println "Current versionCode " + currentVersionCode
-    }
+        println "Current versionName " + currentVersionName
 
-    def splitVersionName = currentVersionName.split("[.]")
-    major = splitVersionName[0]
-    minor = splitVersionName[1]
-    patch = splitVersionName[2]
+        def splitVersionName = currentVersionName.split("[.]")
+        major = splitVersionName[0]
+        minor = splitVersionName[1]
+        patch = splitVersionName[2]
 
 
-    if (project.hasProperty("versionNameInput")) {
-        if (!versionNameInput.matches("^[0-9]+.[0-9]+.[0-9]+\$")) {
-            println "Version name is incorrect"
-            isVersionNameInputCorrect = false
-        } else {
-            newVersionName = versionNameInput
+        if (project.hasProperty("versionNameInput")) {
+            if (!versionNameInput.matches("^[0-9]+.[0-9]+.[0-9]+\$")) {
+                println "Version name is incorrect"
+                isVersionNameInputCorrect = false
+            } else {
+                newVersionName = versionNameInput
+            }
+        } else if (project.hasProperty("type")) {
+            if (type == "major") {
+                major = Integer.parseInt(major) + 1
+                minor = 0
+                patch = 0
+            } else if (type == "minor") {
+                minor = Integer.parseInt(minor) + 1
+                patch = 0
+            } else if (type == "patch") {
+                patch = Integer.parseInt(patch) + 1
+                print patch
+            }
+            newVersionName = major + "." + minor + "." + patch
         }
-    } else if (project.hasProperty("type")) {
-        if (type == "major") {
-            major = Integer.parseInt(major) + 1
-            minor = 0
-            patch = 0
-        } else if (type == "minor") {
-            minor = Integer.parseInt(minor) + 1
-            patch = 0
-        } else if (type == "patch") {
-            patch = Integer.parseInt(patch) + 1
-            print patch
-        }
-        newVersionName = major + "." + minor + "." + patch
-    }
 
-    if (isVersionNameInputCorrect) {
-        doLast {
+        if (isVersionNameInputCorrect) {
+
             buildFile.text = contentFile.replaceFirst("versionName\\s\"[0-9.]*\"", "versionName " + "\"" + newVersionName + "\"")
             messageCommit = "Increase version to " + newVersionName + "." + currentVersionCode
             println messageCommit
@@ -145,11 +144,9 @@ task pushCode {
         if (project.hasProperty("branch")) {
             def xxx = ['sh', '-c', 'git push origin ' + branch].execute().text.trim()
             println "Commit and push code at branch $branch"
-            xxx.waitForProcessOutput(System.out, System.err)
         } else {
-            def xxx =  ['sh', '-c', 'git push origin'].execute()
+            def xxx = ['sh', '-c', 'git push origin'].execute()
             println "Commit and push code at current branch"
-            print xxx.text
         }
     }
 }
@@ -165,11 +162,45 @@ task createAndPushTag {
 
         if (project.hasProperty("isPushTag") && isPushTag == "true") {
             if (project.hasProperty("branch")) {
-                ['sh', '-c', 'git push origin ' + tagName].execute().text.trim()
-                println "Create and push tag at branch $branch"
+
+                println("sjkafhsjadfgasbjfbasd")
+//                def sta = "git push origin " + tagName
+//                def outputStream = new StringBuffer()
+//
+//                sta.execute()
+//
+//                sta.waitForProcessOutput(outputStream, System.err)
+//                print(outputStream.toString())
+
+               // ['sh', '-c', 'git push origin ' + tagName].execute().text.trim()
+              //  println "Create and push tag at branch $branch"
             } else {
-                println "You must provide branch to push tag"
+               // println "You must provide branch to push tag"
+
+//                def sta = "sh -c git push origin " + tagName
+//                println (sta)
+//                def outputStream = new StringBuffer()
+//
+//                sta.execute()
+//
+//                sta.waitForProcessOutput(outputStream, System.err)
+//                print(outputStream.toString())
             }
         }
+    }
+}
+
+def excuteGit(cmd){
+        print("run this h")
+        def proc = cmd.toString().execute()
+        def outputStream = new StringBuffer()
+        proc.waitForProcessOutput(outputStream, System.err)
+        println(outputStream.toString())
+
+}
+
+task teee{
+    doLast{
+        excuteGit("git add .")
     }
 }
