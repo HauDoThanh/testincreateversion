@@ -25,7 +25,7 @@ def getVersions = {
 
     println("currentVersionCode: $currentVersionCode")
     println("currentVersionName: $currentVersionName")
-    println("tagName: $tagName")
+    println("tagName: $tagName\n")
 }
 
 
