@@ -208,6 +208,6 @@ task teee {
         executeGit("git commit -m fdsfsfasf")
 
         println("git push")
-        executeGit("git push")
+        executeGit("git push tttt")
     }
 }
