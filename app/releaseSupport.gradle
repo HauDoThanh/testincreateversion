@@ -32,7 +32,7 @@ def getVersions = {
 }
 
 
- def parseVersion(pattern, contentFile) {
+def parseVersion(pattern, contentFile) {
     def versionRex = Pattern.compile(pattern, Pattern.MULTILINE).matcher(contentFile)
     def versionValue = ""
     while (versionRex.find()) {
@@ -172,10 +172,10 @@ task createAndPushTag {
 //                sta.waitForProcessOutput(outputStream, System.err)
 //                print(outputStream.toString())
 
-               // ['sh', '-c', 'git push origin ' + tagName].execute().text.trim()
-              //  println "Create and push tag at branch $branch"
+                // ['sh', '-c', 'git push origin ' + tagName].execute().text.trim()
+                //  println "Create and push tag at branch $branch"
             } else {
-               // println "You must provide branch to push tag"
+                // println "You must provide branch to push tag"
 
 //                def sta = "sh -c git push origin " + tagName
 //                println (sta)
@@ -190,17 +190,24 @@ task createAndPushTag {
     }
 }
 
-def excuteGit(cmd){
-        print("run this h")
-        def proc = cmd.toString().execute()
-        def outputStream = new StringBuffer()
-        proc.waitForProcessOutput(outputStream, System.err)
-        println(outputStream.toString())
+def executeGit(cmd) {
+    print("run this h")
+    def proc = cmd.toString().execute()
+    def outputStream = new StringBuffer()
+    proc.waitForProcessOutput(outputStream, System.err)
+    println(outputStream.toString())
 
 }
 
-task teee{
-    doLast{
-        excuteGit("git add .")
+task teee {
+    doLast {
+        println("git add")
+        executeGit("git add .")
+
+        println("git commit")
+        executeGit("git commit -m fdsfsfasf")
+
+        println("git push")
+        executeGit("git push")
     }
 }
