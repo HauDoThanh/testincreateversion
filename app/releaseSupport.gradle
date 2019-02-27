@@ -56,25 +56,21 @@ task increaseVersionCode {
 
         def newVersionCode
 
-        if (project.hasProperty("specificVersionCode")) {
+        if (project.hasProperty("specificVersionCode") && specificVersionCode != 0) {
             if (!specificVersionCode.matches("^\\d+\$")) {
                 throw new InvalidPropertiesFormatException("Version code is incorrect")
-            } else if (specificVersionCode == "0") {
-                newVersionCode = Integer.parseInt(currentVersionCode) + 1
             } else {
                 newVersionCode = Integer.parseInt(specificVersionCode)
             }
         } else {
             newVersionCode = Integer.parseInt(currentVersionCode) + 1
         }
-        if (newVersionCode > 0) {
 
-            buildFile.text = contentFile.replaceFirst(versionCodePattern, "versionCode $newVersionCode")
-            def messageCommit = "Increase version to $currentVersionName.$newVersionCode"
-            println messageCommit
+        buildFile.text = contentFile.replaceFirst(versionCodePattern, "versionCode $newVersionCode")
+        def messageCommit = "Increase version to $currentVersionName.$newVersionCode"
+        println messageCommit
 
-            commitCode(messageCommit)
-        }
+        commitCode(messageCommit)
     }
 }
 
@@ -99,7 +95,6 @@ task increaseVersionName {
         def major
         def minor
         def patch
-        def isSpecificVersionNameCorrect = true
 
         def splitVersionName = currentVersionName.split("[.]")
         major = splitVersionName[0]
@@ -113,7 +108,6 @@ task increaseVersionName {
             newVersionName = major + "." + minor + "." + patch
         } else if (project.hasProperty("specificVersionName")) {
             if (!specificVersionName.matches("^[0-9]+.[0-9]+.[0-9]+\$")) {
-                isspecificVersionNameCorrect = false
                 throw new InvalidPropertiesFormatException("Version name is incorrect")
             } else {
                 newVersionName = specificVersionName
@@ -133,13 +127,11 @@ task increaseVersionName {
             newVersionName = major + "." + minor + "." + patch
         }
 
-        if (isSpecificVersionNameCorrect) {
-            buildFile.text = contentFile.replaceFirst(versionNamePattern, "versionName \"$newVersionName\"")
-            def messageCommit = "Increase-version-to-$newVersionName.$currentVersionCode"
-            println messageCommit
+        buildFile.text = contentFile.replaceFirst(versionNamePattern, "versionName \"$newVersionName\"")
+        def messageCommit = "Increase-version-to-$newVersionName.$currentVersionCode"
+        println messageCommit
 
-            commitCode(messageCommit)
-        }
+        commitCode(messageCommit)
     }
 }
 
@@ -153,9 +145,9 @@ task pushCode {
             "Example2: ./gradlew pushCode -> Push code to current branch"
     doLast {
         if (project.hasProperty("branch")) {
-            executeGit("git push origin $branch")
+            executeGit(['sh', '-c', 'git push origin ' + branchPush])
         } else {
-            executeGit("git push")
+            executeGit(['sh', '-c', 'git push'])
         }
     }
 }
@@ -171,10 +163,10 @@ task createAndPushTag {
     doLast {
         getVersion()
 
-        executeGit("git tag $tagName")
+        executeGit(['sh', '-c', 'git tag ' + tagName])
 
         if (project.hasProperty("isPushTag") && isPushTag == "true") {
-            executeGit("git push origin $tagName")
+            executeGit(['sh', '-c', 'git push origin ' + tagName])
         }
     }
 }
