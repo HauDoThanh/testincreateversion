@@ -128,7 +128,7 @@ task increaseVersionName {
         }
 
         buildFile.text = contentFile.replaceFirst(versionNamePattern, "versionName \"$newVersionName\"")
-        def messageCommit = "Increase-version-to-$newVersionName.$currentVersionCode"
+        def messageCommit = "Increase version to $newVersionName.$currentVersionCode"
         println messageCommit
 
         commitCode(messageCommit)
